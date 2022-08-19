@@ -1,4 +1,4 @@
-# decode_100ms
+# Decode_100ms
 
 Flutter application for one-to-one calls using 100ms SDK❤️
 

@@ -22,7 +22,9 @@ class MyApp extends StatelessWidget {
           primaryColor: Color.fromARGB(255, 13, 107, 184),
           backgroundColor: Colors.black,
           scaffoldBackgroundColor: Colors.black),
-      home: const MyHomePage(title: 'Decode 100ms'),
+      home: ListenableProvider.value(
+        value: HMSNotifier(),
+        child: const MyHomePage(title: 'Decode 100ms')),
     );
   }
 }
@@ -36,6 +38,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
   void getPermissions() async {
     await Permission.camera.request();
     await Permission.microphone.request();
@@ -49,6 +52,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    return ListenableProvider.value(value: context.read<HMSNotifier>(), child: roomWidget());
+  }
+
+  Widget roomWidget() {
+
+
     Color hmsdefaultColor = const Color.fromRGBO(36, 113, 237, 1);
     Color surfaceColor = const Color.fromRGBO(29, 34, 41, 1);
     Color enabledTextColor = const Color.fromRGBO(255, 255, 255, 0.98);
@@ -67,39 +77,53 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(
               height: 50,
             ),
-            ElevatedButton(
-              style: ButtonStyle(
-                  shadowColor: MaterialStateProperty.all(surfaceColor),
-                  backgroundColor: MaterialStateProperty.all(hmsdefaultColor),
-                  shape: MaterialStateProperty.all<RoundedRectangleBorder>(
-                      RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ))),
-              onPressed: () async {
-                getPermissions();
-
-                Navigator.of(context).push(MaterialPageRoute(
-                    builder: (_) => ListenableProvider.value(
-                        value: HMSNotifier(), child: VideoCallScreen())));
-              },
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
-                decoration: const BoxDecoration(
-                    borderRadius: BorderRadius.all(Radius.circular(8))),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text("Join now",
-                        style: GoogleFonts.inter(
-                            color: enabledTextColor,
-                            height: 1.5,
-                            fontSize: 16,
-                            letterSpacing: 0.5,
-                            fontWeight: FontWeight.w600))
-                  ],
-                ),
-              ),
+            ListenableProvider.value(
+              value: context.read<HMSNotifier>(),
+              child: context.watch<HMSNotifier>().isPreviewSuccessful
+                  ? Column(
+                    children: [
+                      context.watch<HMSNotifier>().remotePeer != null?
+                      Text("${context.read<HMSNotifier>().remotePeer?.name} is calling..."):Container(),
+                      SizedBox(height: 20,),
+                      ElevatedButton(
+                          style: ButtonStyle(
+                              shadowColor: MaterialStateProperty.all(surfaceColor),
+                              backgroundColor:
+                                  MaterialStateProperty.all(hmsdefaultColor),
+                              shape:
+                                  MaterialStateProperty.all<RoundedRectangleBorder>(
+                                      RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8.0),
+                              ))),
+                          onPressed: () async {
+                            getPermissions();
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (_) => ListenableProvider.value(
+                                    value: context.read<HMSNotifier>(),
+                                    child: VideoCallScreen())));
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
+                            decoration: const BoxDecoration(
+                                borderRadius: BorderRadius.all(Radius.circular(8))),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text("Accept",
+                                    style: GoogleFonts.inter(
+                                        color: enabledTextColor,
+                                        height: 1.5,
+                                        fontSize: 16,
+                                        letterSpacing: 0.5,
+                                        fontWeight: FontWeight.w600))
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  )
+                  : Text("Connecting..."),
             )
           ],
         ),

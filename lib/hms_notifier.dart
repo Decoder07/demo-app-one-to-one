@@ -1,28 +1,46 @@
+import 'dart:developer';
+
 import 'package:decode_100ms/hms_services.dart';
 import 'package:flutter/material.dart';
 import 'package:hmssdk_flutter/hmssdk_flutter.dart';
 
-class HMSNotifier extends ChangeNotifier implements HMSUpdateListener {
+class HMSNotifier extends ChangeNotifier
+    implements HMSUpdateListener, HMSPreviewListener, HMSActionResultListener {
   late HMSSDK hmsSDK;
 
   HMSNotifier() {
     hmsSDK = HMSSDK();
     hmsSDK.build();
+    startPreview();
   }
 
   HMSVideoTrack? localPeerVideoTrack, remotePeerVideoTrack;
   bool isLocalVideoOn = true, isLocalAudioOn = true;
   HMSPeer? localPeer, remotePeer;
+  List<String?>? token;
+  late HMSConfig config;
+  bool isPreviewSuccessful = false;
+
+  Future<void> getToken() async {
+    token = await HMSServices().getToken(
+        user: "test",
+        room: "https://decoder.app.100ms.live/meeting/xno-jwn-phi");
+    config = HMSConfig(authToken: token![0]!, userName: "test");
+  }
 
   Future<bool> joinMeeting() async {
-    List<String?>? token = await HMSServices().getToken(
-        user: "test",
-        room:
-            "https://yogi-livestreamingkit.app.100ms.live/meeting/xuq-zjx-ovh");
     if (token == null) return false;
-    HMSConfig config = HMSConfig(authToken: token[0]!, userName: "test");
     hmsSDK.addUpdateListener(listener: this);
     hmsSDK.join(config: config);
+    return true;
+  }
+
+  Future<bool> startPreview() async {
+    await getToken();
+    if (token == null) return false;
+    if (token![0] == null) return false;
+    hmsSDK.addPreviewListener(listener: this);
+    hmsSDK.preview(config: config);
     return true;
   }
 
@@ -65,7 +83,6 @@ class HMSNotifier extends ChangeNotifier implements HMSUpdateListener {
 
   @override
   void onPeerUpdate({required HMSPeer peer, required HMSPeerUpdate update}) {
-    // TODO: implement onPeerUpdate
     if (update == HMSPeerUpdate.peerJoined) {
       if (!peer.isLocal) {
         remotePeer = peer;
@@ -139,9 +156,19 @@ class HMSNotifier extends ChangeNotifier implements HMSUpdateListener {
     hmsSDK.switchCamera();
   }
 
+  void cleanStore() {
+    localPeer = null;
+    remotePeer = null;
+    localPeerVideoTrack = null;
+    remotePeerVideoTrack = null;
+  }
+
   void leaveRoom() {
     hmsSDK.removeUpdateListener(listener: this);
-    hmsSDK.leave();
+    isPreviewSuccessful = false;
+    cleanStore();
+    notifyListeners();
+    hmsSDK.leave(hmsActionResultListener: this);
   }
 
   void switchVideo() {
@@ -154,5 +181,113 @@ class HMSNotifier extends ChangeNotifier implements HMSUpdateListener {
     hmsSDK.switchAudio(isOn: isLocalAudioOn);
     isLocalAudioOn = !isLocalAudioOn;
     notifyListeners();
+  }
+
+  @override
+  void onPreview({required HMSRoom room, required List<HMSTrack> localTracks}) {
+    log("onPreview-> room: ${room.toString()}");
+    for (HMSPeer each in room.peers!) {
+      if (each.isLocal) {
+        localPeer = each;
+        break;
+      }
+    }
+    for (var track in localTracks) {
+      if (track.kind == HMSTrackKind.kHMSTrackKindVideo) {
+        // isVideoOn = !(track.isMute);
+        localPeerVideoTrack = track as HMSVideoTrack;
+      }
+      if (track.kind == HMSTrackKind.kHMSTrackKindAudio) {
+        // isAudioOn = !(track.isMute);
+      }
+    }
+    // notifyListeners();
+    isPreviewSuccessful = true;
+    notifyListeners();
+    hmsSDK.removePreviewListener(listener: this);
+  }
+
+  @override
+  void onException(
+      {HMSActionResultListenerMethod? methodType,
+      Map<String, dynamic>? arguments,
+      required HMSException hmsException}) {
+    // TODO: implement onException
+  }
+
+  @override
+  void onSuccess(
+      {HMSActionResultListenerMethod? methodType,
+      Map<String, dynamic>? arguments}) {
+    // TODO: implement onSuccess
+    switch (methodType) {
+      case HMSActionResultListenerMethod.leave:
+        // TODO: Handle this case.
+        startPreview();
+        break;
+      case HMSActionResultListenerMethod.changeTrackState:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.changeMetadata:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.endRoom:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.removePeer:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.acceptChangeRole:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.changeRole:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.changeTrackStateForRole:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.startRtmpOrRecording:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.stopRtmpAndRecording:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.changeName:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.sendBroadcastMessage:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.sendGroupMessage:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.sendDirectMessage:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.hlsStreamingStarted:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.hlsStreamingStopped:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.startScreenShare:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.stopScreenShare:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.startAudioShare:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.stopAudioShare:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.setTrackSettings:
+        // TODO: Handle this case.
+        break;
+      case HMSActionResultListenerMethod.unknown:
+        // TODO: Handle this case.
+        break;
+    }
   }
 }

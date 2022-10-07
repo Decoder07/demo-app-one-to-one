@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:decode_100ms/hms_notifier.dart';
 import 'package:draggable_widget/draggable_widget.dart';
 import 'package:flutter/material.dart';
@@ -36,7 +38,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         (hmsNotifier) => hmsNotifier.localPeerVideoTrack);
     HMSVideoTrack? remoteTrack = context.select<HMSNotifier, HMSVideoTrack?>(
         (hmsNotifier) => hmsNotifier.remotePeerVideoTrack);
-
+    log("onPreview Remote track ${remoteTrack == null} and isMute ${remoteTrack?.isMute??"NULL"}");
     return WillPopScope(
       onWillPop: () async {
         context.read<HMSNotifier>().leaveRoom();

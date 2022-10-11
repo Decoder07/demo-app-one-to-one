@@ -11,7 +11,6 @@ class HMSNotifier extends ChangeNotifier
   HMSNotifier() {
     hmsSDK = HMSSDK();
     hmsSDK.build();
-    startPreview();
   }
 
   HMSVideoTrack? localPeerVideoTrack, remotePeerVideoTrack;
@@ -20,23 +19,25 @@ class HMSNotifier extends ChangeNotifier
   List<String?>? token;
   late HMSConfig config;
   bool isPreviewSuccessful = false;
+  bool isJoinSuccessful = false;
 
-  Future<void> getToken() async {
-    token = await HMSServices().getToken(
-        user: "test",
-        room: "https://decoder.app.100ms.live/meeting/xno-jwn-phi");
-    config = HMSConfig(authToken: token![0]!, userName: "test");
+  Future<void> getToken(String user, String meetingUrl) async {
+    token = await HMSServices().getToken(user: user, room: meetingUrl);
+    config = HMSConfig(authToken: token![0]!, userName: user);
   }
 
   Future<bool> joinMeeting() async {
+    log("onPreview called join meeting");
+    isJoinSuccessful = true;
+    hmsSDK.removePreviewListener(listener: this);
     if (token == null) return false;
     hmsSDK.addUpdateListener(listener: this);
     hmsSDK.join(config: config);
     return true;
   }
 
-  Future<bool> startPreview() async {
-    await getToken();
+  Future<bool> startPreview(String user, String meetingUrl) async {
+    await getToken(user, meetingUrl);
     if (token == null) return false;
     if (token![0] == null) return false;
     hmsSDK.addPreviewListener(listener: this);
@@ -64,7 +65,6 @@ class HMSNotifier extends ChangeNotifier
 
   @override
   void onJoin({required HMSRoom room}) {
-    // TODO: implement onJoin
     room.peers?.forEach((peer) {
       if (peer.isLocal) {
         localPeer = peer;
@@ -204,7 +204,6 @@ class HMSNotifier extends ChangeNotifier
     // notifyListeners();
     isPreviewSuccessful = true;
     notifyListeners();
-    hmsSDK.removePreviewListener(listener: this);
   }
 
   @override
@@ -223,7 +222,6 @@ class HMSNotifier extends ChangeNotifier
     switch (methodType) {
       case HMSActionResultListenerMethod.leave:
         // TODO: Handle this case.
-        startPreview();
         break;
       case HMSActionResultListenerMethod.changeTrackState:
         // TODO: Handle this case.
@@ -287,6 +285,8 @@ class HMSNotifier extends ChangeNotifier
         break;
       case HMSActionResultListenerMethod.unknown:
         // TODO: Handle this case.
+        break;
+      default:
         break;
     }
   }

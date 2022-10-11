@@ -1,9 +1,20 @@
+// ignore_for_file: prefer_const_constructors
+
+import 'dart:developer';
+
+import 'package:decode_100ms/caller_screen.dart';
+import 'package:decode_100ms/color.dart';
 import 'package:decode_100ms/hms_notifier.dart';
-import 'package:decode_100ms/video_call_screen.dart';
+import 'package:decode_100ms/receive_call_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+
+Future _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  log("Background Message is -> ${message.data.toString()}");
+}
 
 void main() {
   runApp(const MyApp());
@@ -22,9 +33,9 @@ class MyApp extends StatelessWidget {
           primaryColor: Color.fromARGB(255, 13, 107, 184),
           backgroundColor: Colors.black,
           scaffoldBackgroundColor: Colors.black),
+      //HMSNotifer class is the central data store of the application
       home: ListenableProvider.value(
-        value: HMSNotifier(),
-        child: const MyHomePage(title: 'Decode 100ms')),
+          value: HMSNotifier(), child: const MyHomePage(title: 'Decode 100ms')),
     );
   }
 }
@@ -38,97 +49,138 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  late final FirebaseMessaging _messaging;
 
-  void getPermissions() async {
-    await Permission.camera.request();
-    await Permission.microphone.request();
-    while ((await Permission.camera.isDenied)) {
-      await Permission.camera.request();
+  void receiveCall(RemoteMessage message) {
+    String meetingUrl = message.data["link"];
+    String user = message.data["caller"];
+    context.read<HMSNotifier>().startPreview(user, meetingUrl);
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => ListenableProvider.value(
+              value: context.read<HMSNotifier>(),
+              child: ReceiveCall(
+                user: user,
+              ),
+            )));
+  }
+
+  // This method takes care of notifications when the app is terminated
+  checkForInitialMessage() async {
+    await Firebase.initializeApp();
+    RemoteMessage? initialMessage =
+        await FirebaseMessaging.instance.getInitialMessage();
+    if (initialMessage != null) {
+      log("Called by ${initialMessage.data["caller"]} and link is ${initialMessage.data["link"]}");
+      receiveCall(initialMessage);
     }
-    while ((await Permission.microphone.isDenied)) {
-      await Permission.microphone.request();
+  }
+
+  //This method takes care of firebase push notifications
+  void registerNotification() async {
+    await Firebase.initializeApp();
+    _messaging = FirebaseMessaging.instance;
+
+    // This method is called when the app is running in background
+    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+    NotificationSettings settings = await _messaging.requestPermission(
+      alert: true,
+      badge: true,
+      provisional: false,
+      sound: true,
+    );
+
+    //If the user has allowed notification
+    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
+      //When the notification is opened by the user
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+        log("Called by ${message.data["caller"]} and link is ${message.data["link"]}");
+        receiveCall(message);
+      });
+
+      //When app is running and is in foreground
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+        String user = message.data["caller"];
+        showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  actionsPadding:
+                      EdgeInsets.only(left: 20, right: 20, bottom: 10),
+                  insetPadding:
+                      EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  contentPadding:
+                      EdgeInsets.only(top: 20, bottom: 15, left: 24, right: 24),
+                  title: Text("$user is calling..."),
+                  actions: [
+                    ElevatedButton(
+                        style: ButtonStyle(
+                            shadowColor:
+                                MaterialStateProperty.all(themeSurfaceColor),
+                            backgroundColor: MaterialStateProperty.all(
+                                themeBottomSheetColor),
+                            shape: MaterialStateProperty.all<
+                                RoundedRectangleBorder>(RoundedRectangleBorder(
+                              side: BorderSide(
+                                  width: 1,
+                                  color: Color.fromRGBO(107, 125, 153, 1)),
+                              borderRadius: BorderRadius.circular(8.0),
+                            ))),
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 12, horizontal: 10),
+                          child: Text('Decline',
+                              style: GoogleFonts.inter(
+                                  color: themeDefaultColor,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.50)),
+                        )),
+                    ElevatedButton(
+                      style: ButtonStyle(
+                          shadowColor:
+                              MaterialStateProperty.all(themeSurfaceColor),
+                          backgroundColor:
+                              MaterialStateProperty.all(hmsdefaultColor),
+                          shape:
+                              MaterialStateProperty.all<RoundedRectangleBorder>(
+                                  RoundedRectangleBorder(
+                            side: BorderSide(width: 1, color: hmsdefaultColor),
+                            borderRadius: BorderRadius.circular(8.0),
+                          ))),
+                      onPressed: () =>
+                          {Navigator.pop(context), receiveCall(message)},
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 12, horizontal: 10),
+                        child: Text(
+                          'Accept',
+                          style: GoogleFonts.inter(
+                              color: themeDefaultColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: 0.50),
+                        ),
+                      ),
+                    ),
+                  ],
+                ));
+      });
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-
-    return ListenableProvider.value(value: context.read<HMSNotifier>(), child: roomWidget());
+  void initState() {
+    checkForInitialMessage();
+    super.initState();
+    registerNotification();
   }
 
-  Widget roomWidget() {
-
-
-    Color hmsdefaultColor = const Color.fromRGBO(36, 113, 237, 1);
-    Color surfaceColor = const Color.fromRGBO(29, 34, 41, 1);
-    Color enabledTextColor = const Color.fromRGBO(255, 255, 255, 0.98);
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'Welcome to 100ms',
-            ),
-            const SizedBox(
-              height: 50,
-            ),
-            ListenableProvider.value(
-              value: context.read<HMSNotifier>(),
-              child: context.watch<HMSNotifier>().isPreviewSuccessful
-                  ? Column(
-                    children: [
-                      context.watch<HMSNotifier>().remotePeer != null?
-                      Text("${context.read<HMSNotifier>().remotePeer?.name} is calling..."):Container(),
-                      SizedBox(height: 20,),
-                      ElevatedButton(
-                          style: ButtonStyle(
-                              shadowColor: MaterialStateProperty.all(surfaceColor),
-                              backgroundColor:
-                                  MaterialStateProperty.all(hmsdefaultColor),
-                              shape:
-                                  MaterialStateProperty.all<RoundedRectangleBorder>(
-                                      RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8.0),
-                              ))),
-                          onPressed: () async {
-                            getPermissions();
-                            Navigator.of(context).push(MaterialPageRoute(
-                                builder: (_) => ListenableProvider.value(
-                                    value: context.read<HMSNotifier>(),
-                                    child: VideoCallScreen())));
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),
-                            decoration: const BoxDecoration(
-                                borderRadius: BorderRadius.all(Radius.circular(8))),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text("Accept",
-                                    style: GoogleFonts.inter(
-                                        color: enabledTextColor,
-                                        height: 1.5,
-                                        fontSize: 16,
-                                        letterSpacing: 0.5,
-                                        fontWeight: FontWeight.w600))
-                              ],
-                            ),
-                          ),
-                        ),
-                    ],
-                  )
-                  : Text("Connecting..."),
-            )
-          ],
-        ),
-      ),
-      // This trailing comma makes auto-formatting nicer for build methods.
-    );
+  @override
+  Widget build(BuildContext context) {
+    return ListenableProvider.value(
+        value: context.read<HMSNotifier>(), child: CallerScreen());
   }
 }

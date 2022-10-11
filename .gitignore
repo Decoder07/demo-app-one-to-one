@@ -30,6 +30,9 @@
 .pub-cache/
 .pub/
 /build/
+/android/app/google-services.json
+.firebaserc
+firebase.json
 
 # Web related
 lib/generated_plugin_registrant.dart

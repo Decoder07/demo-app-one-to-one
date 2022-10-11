@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:decode_100ms/color.dart';
 import 'package:decode_100ms/hms_notifier.dart';
 import 'package:draggable_widget/draggable_widget.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,8 @@ import 'package:hmssdk_flutter/hmssdk_flutter.dart';
 import 'package:provider/provider.dart';
 
 class VideoCallScreen extends StatefulWidget {
+  const VideoCallScreen({Key? key}) : super(key: key);
+
   @override
   State<VideoCallScreen> createState() => _VideoCallScreenState();
 }
@@ -23,7 +26,6 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
   void initMeeting() async {
     bool ans = await context.read<HMSNotifier>().joinMeeting();
     if (!ans) {
-      print("Failed to join meeting");
       Navigator.of(context).pop();
     }
   }
@@ -38,7 +40,7 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
         (hmsNotifier) => hmsNotifier.localPeerVideoTrack);
     HMSVideoTrack? remoteTrack = context.select<HMSNotifier, HMSVideoTrack?>(
         (hmsNotifier) => hmsNotifier.remotePeerVideoTrack);
-    log("onPreview Remote track ${remoteTrack == null} and isMute ${remoteTrack?.isMute??"NULL"}");
+    log("onPreview Remote track ${remoteTrack == null} and isMute ${remoteTrack?.isMute ?? "NULL"}");
     return WillPopScope(
       onWillPop: () async {
         context.read<HMSNotifier>().leaveRoom();
@@ -49,43 +51,37 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
           child: Scaffold(
         body: Stack(children: [
           (remotePeer == null)
-              ? Container(
-                  color: Colors.black.withOpacity(0.9),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Padding(
-                        padding: EdgeInsets.only(left: 20.0, bottom: 20),
-                        child: Text(
-                          "You're the only one here",
-                          style: TextStyle(
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 60.0),
+                    child: Container(
+                      color: Colors.black.withOpacity(0.9),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          CircleAvatar(
+                            radius: 30,
+                            backgroundColor: hmsdefaultColor,
+                            child: Text(
+                              "D",
+                              style: TextStyle(
+                                  color: themeDefaultColor,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 30,
+                          ),
+                          const Text(
+                            "Connecting...",
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold),
-                        ),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 20.0),
-                        child: Text(
-                          "Share meeting link with others",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(left: 20.0),
-                        child: Text(
-                          "that you want in the meeting",
-                          style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 )
               : Stack(
@@ -232,19 +228,37 @@ class _VideoCallScreenState extends State<VideoCallScreen> {
 }
 
 Widget localPeerTile(HMSVideoTrack? localTrack, BuildContext context) {
-  return Container(
-    height: 200,
-    width: 150,
-    color: Colors.black.withOpacity(0.4),
-    child: (context.watch<HMSNotifier>().isLocalVideoOn && localTrack != null)
-        ? HMSVideoView(
-            track: localTrack,
-          )
-        : Center(
-            child: Text(
-              context.read<HMSNotifier>().localPeer?.name.substring(0, 1) ?? "",
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+  return ClipRRect(
+    borderRadius: const BorderRadius.all(Radius.circular(10)),
+    child: Container(
+      height: 150,
+      width: 120,
+      color: Colors.grey.withOpacity(0.1),
+      child: (context.watch<HMSNotifier>().isLocalVideoOn && localTrack != null)
+          ? HMSVideoView(
+              track: localTrack,
+            )
+          : Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.blue.withAlpha(4),
+                  shape: BoxShape.circle,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.blue,
+                      blurRadius: 20.0,
+                      spreadRadius: 5.0,
+                    ),
+                  ],
+                ),
+                child: Text(
+                  context.read<HMSNotifier>().localPeer?.name.substring(0, 1) ??
+                      "D",
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
-          ),
+    ),
   );
 }

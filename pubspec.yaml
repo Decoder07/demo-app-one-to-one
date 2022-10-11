@@ -35,7 +35,10 @@ dependencies:
   http:
   permission_handler:
   draggable_widget:
-
+  firebase_core:
+  firebase_messaging:
+  flutter_local_notifications:
+  cloud_functions:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2

@@ -6,6 +6,11 @@ Flutter application for one-to-one calls using 100ms SDK
 
 This readme guides you about how you can build a one-to-one calling application using 100ms flutter SDK.
 
+
+<p align="center">
+<img src="https://github.com/Decoder07/demo-app-one-to-one/blob/Fast-preview-join/assets/hms_call.gif" title="receive-call" float=center height=400>
+</p>
+
 This application has three important parts :
 
 - Call remote peer
@@ -187,6 +192,10 @@ We have two video views in the `VideoCallScreen`:
 - Floating tile for local peer
 - Full-screen view for the remote peer
 
+We have `localPeerVideoTrack` for local peer track and `remotePeerVideoTrack` for remote peer video track.
+Similarly, we have `localPeer` for the local peer object and `remotePeer` for the remote peer.
+
+#### Read more about the implementation [100ms-docs](https://www.100ms.live/docs/flutter/v2/foundation/basics)
 
 #### For other use, cases check out: [100ms-flutter-repo](https://github.com/100mslive/100ms-flutter)
 

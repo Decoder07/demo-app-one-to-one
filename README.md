@@ -6,10 +6,7 @@ Flutter application for one-to-one calls using 100ms SDK
 
 This readme guides you about how you can build a one-to-one calling application using 100ms flutter SDK.
 
-
-<p align="center">
-<img src="https://github.com/Decoder07/demo-app-one-to-one/blob/Fast-preview-join/assets/hms_call.gif" title="receive-call" float=center height=400>
-</p>
+https://drive.google.com/file/d/1D4RYbwt0ZowC-A_TFZxVMyeg1ITLagv5/view?usp=sharing
 
 This application has three important parts :
 

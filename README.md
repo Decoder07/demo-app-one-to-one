@@ -26,7 +26,7 @@ More info about how to set up the firebase cloud functions can be found [here](h
 as soon as the call button is pressed.
 
 <p>
-<img src="https://github.com/Decoder07/demo-app-one-to-one/blob/Fast-preview-join/assets/caller_flow.png" title="caller-flow" float=center height=300>
+<img src="https://github.com/Decoder07/demo-app-one-to-one/blob/Fast-preview-join/assets/caller_flow.png" title="caller-flow" float=center height=150>
 </p>
 
 2. Then, we call the preview method `startPreview` from our `HMSNotifier` class which internally calls the HMSSDK `preview` method.
@@ -175,8 +175,8 @@ FirebaseMessaging.onMessage.listen((RemoteMessage message) {
 
 We have written the `receiveCall` method for receiving calls which in turn calls the HMSSDK's `preview` method and once we receive `onPreview` we show the option to join the room as :
 
-<p>
-<img src="https://github.com/Decoder07/demo-app-one-to-one/blob/Fast-preview-join/assets/receive_call.png" title="receive-call" float=center height=300>
+<p align="center">
+<img src="https://github.com/Decoder07/demo-app-one-to-one/blob/Fast-preview-join/assets/receive_call.png" title="receive-call" float=center height=400>
 </p>
 
 ### One-to-One video call

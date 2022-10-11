@@ -1,4 +1,4 @@
-import 'package:decode_100ms/Utilities.dart';
+import 'package:decode_100ms/utilities.dart';
 import 'package:decode_100ms/color.dart';
 import 'package:decode_100ms/hms_notifier.dart';
 import 'package:decode_100ms/video_call_screen.dart';

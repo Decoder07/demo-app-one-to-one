@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:decode_100ms/Utilities.dart';
+import 'package:decode_100ms/utilities.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
 class MessagingService {

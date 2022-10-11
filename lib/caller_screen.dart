@@ -1,4 +1,4 @@
-import 'package:decode_100ms/Utilities.dart';
+import 'package:decode_100ms/utilities.dart';
 import 'package:decode_100ms/color.dart';
 import 'package:decode_100ms/firebase_messaging.dart';
 import 'package:decode_100ms/hms_notifier.dart';

@@ -6,6 +6,8 @@ Flutter application for one-to-one calls using 100ms SDK
 
 This readme guides you about how you can build a one-to-one calling application using 100ms flutter SDK.
 
+> The firebase setup is only done for Android. So this will not work on iOS.
+
 Checkout the video [here](https://www.youtube.com/shorts/5eAnJTwgVVY).
 
 This application has three important parts :

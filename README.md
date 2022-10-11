@@ -6,7 +6,7 @@ Flutter application for one-to-one calls using 100ms SDK
 
 This readme guides you about how you can build a one-to-one calling application using 100ms flutter SDK.
 
-https://drive.google.com/file/d/1D4RYbwt0ZowC-A_TFZxVMyeg1ITLagv5/view?usp=sharing
+Checkout the video [here](https://www.youtube.com/shorts/5eAnJTwgVVY).
 
 This application has three important parts :
 

@@ -30,12 +30,13 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
-
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  late HMSNotifier dataStore;
+
   void getPermissions() async {
     await Permission.camera.request();
     await Permission.microphone.request();
@@ -45,6 +46,10 @@ class _MyHomePageState extends State<MyHomePage> {
     while ((await Permission.microphone.isDenied)) {
       await Permission.microphone.request();
     }
+  }
+
+  void setDataStore() {
+    dataStore = HMSNotifier();
   }
 
   @override
@@ -77,10 +82,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   ))),
               onPressed: () async {
                 getPermissions();
-
+                setDataStore();
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) => ListenableProvider.value(
-                        value: HMSNotifier(), child: VideoCallScreen())));
+                        value: dataStore, child: VideoCallScreen())));
               },
               child: Container(
                 padding: const EdgeInsets.fromLTRB(8, 12, 8, 12),

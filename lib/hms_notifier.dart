@@ -18,7 +18,7 @@ class HMSNotifier extends ChangeNotifier implements HMSUpdateListener {
     List<String?>? token = await HMSServices().getToken(
         user: "test",
         room:
-            "https://yogi-livestreamingkit.app.100ms.live/meeting/xuq-zjx-ovh");
+            "https://decoder.app.100ms.live/preview/xno-jwn-phi");
     if (token == null) return false;
     HMSConfig config = HMSConfig(authToken: token[0]!, userName: "test");
     hmsSDK.addUpdateListener(listener: this);
